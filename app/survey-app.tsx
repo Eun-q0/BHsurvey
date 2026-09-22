@@ -230,7 +230,7 @@ function AdminView({ navigate, refresh }: { navigate: (view: View, id?: string) 
 
 export function SurveyApp() {
   const [view, setView] = useState<View>("home"); const [selectedId, setSelectedId] = useState(""); const [surveys, setSurveys] = useState<Survey[]>([]); const [loading, setLoading] = useState(true);
-  const loadSurveys = useCallback(async () => { setLoading(true); try { const response = await fetch("/api/surveys"); const data = await response.json(); if (!response.ok) throw new Error(data.error); setSurveys(data.surveys); } catch { setSurveys(sampleSurveys); toast.info("현재 미리보기 데이터로 표시하고 있습니다."); } finally { setLoading(false); } }, []);
+  const loadSurveys = useCallback(async () => { setLoading(true); try { const response = await fetch("/api/surveys"); const data = await response.json(); if (!response.ok) throw new Error(data.error); setSurveys(data.surveys); } catch { setSurveys([]); toast.error("설문을 불러오지 못했습니다. 잠시 후 새로고침해주세요."); } finally { setLoading(false); } }, []);
   useEffect(() => { loadSurveys(); }, [loadSurveys]);
   useEffect(() => { const sync = () => { const route = routeFromHash(); setView(route.view); setSelectedId(route.id); window.scrollTo({ top: 0 }); }; sync(); window.addEventListener("hashchange", sync); return () => window.removeEventListener("hashchange", sync); }, []);
   const navigate = useCallback((next: View, id = "") => { const hash = next === "home" ? "" : next === "detail" ? `survey=${encodeURIComponent(id)}` : next; if (window.location.hash.slice(1) === hash) { setView(next); setSelectedId(id); window.scrollTo({ top: 0 }); } else window.location.hash = hash; }, []);

@@ -41,7 +41,6 @@ async function seedIfEmpty(db: D1Database) {
 export async function GET(request: Request) {
   try {
     const db = getD1();
-    await seedIfEmpty(db);
     const url = new URL(request.url);
     const code = clean(url.searchParams.get("code"), 20).toUpperCase();
 
@@ -59,8 +58,8 @@ export async function GET(request: Request) {
       return Response.json({ surveys: surveyRows.results, reports: reportRows.results });
     }
 
-    const rows = await db.prepare("SELECT * FROM surveys WHERE approval_status = 'approved' ORDER BY created_at DESC").all<Survey>();
-    return Response.json({ surveys: rows.results });
+    const rows = await db.prepare("SELECT * FROM surveys WHERE approval_status = 'approved' AND id NOT LIKE 'sample-%' ORDER BY created_at DESC").all<Survey>();
+    return Response.json({ surveys: rows.results.map(({ management_code, ...survey }) => survey) });
   } catch (error) {
     const message = error instanceof Error ? error.message : "설문을 불러오지 못했습니다.";
     return Response.json({ error: message }, { status: 500 });
