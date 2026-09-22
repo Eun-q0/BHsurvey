@@ -90,7 +90,7 @@ export async function POST(request: Request) {
     if (required.some((value) => !value)) return Response.json({ error: "필수 항목을 모두 입력해주세요." }, { status: 400 });
     if (!authors.length || authors.some((author) => !author.student_id || !author.name)) return Response.json({ error: "모든 작성자의 학번과 이름을 입력해주세요." }, { status: 400 });
     if (!publicCategories.includes(values.category as never)) return Response.json({ error: "카테고리를 확인해주세요." }, { status: 400 });
-    try { new URL(values.naver_form_url); } catch { return Response.json({ error: "올바른 URL 형식이 아닙니다." }, { status: 400 }); }
+    try { if (!["https:", "http:"].includes(new URL(values.naver_form_url).protocol)) throw new Error("Invalid protocol"); } catch { return Response.json({ error: "올바른 URL 형식이 아닙니다." }, { status: 400 }); }
 
     const id = crypto.randomUUID();
     const managementCode = createManagementCode();
@@ -135,7 +135,7 @@ export async function PATCH(request: Request) {
     else if (action === "owner_update") {
       const title = clean(payload.title, 120), description = clean(payload.short_description, 180), purpose = clean(payload.purpose), usage = clean(payload.usage_plan), deadline = clean(payload.deadline, 10), formUrl = clean(payload.naver_form_url, 600);
       if (![title, description, purpose, usage, deadline, formUrl].every(Boolean)) return Response.json({ error: "수정 항목을 모두 입력해주세요." }, { status: 400 });
-      try { new URL(formUrl); } catch { return Response.json({ error: "올바른 URL 형식이 아닙니다." }, { status: 400 }); }
+      try { if (!["https:", "http:"].includes(new URL(formUrl).protocol)) throw new Error("Invalid protocol"); } catch { return Response.json({ error: "올바른 URL 형식이 아닙니다." }, { status: 400 }); }
       await db.prepare("UPDATE surveys SET title = ?, short_description = ?, purpose = ?, usage_plan = ?, deadline = ?, naver_form_url = ?, approval_status = 'pending', updated_at = ? WHERE id = ?").bind(title, description, purpose, usage, deadline, formUrl, new Date().toISOString(), id).run();
     } else return Response.json({ error: "지원하지 않는 작업입니다." }, { status: 400 });
     return Response.json({ ok: true });
